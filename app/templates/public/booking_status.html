@@ -1,0 +1,103 @@
+{% extends "public/base.html" %}
+{% block title %}Booking Status · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <form method="post" class="form-card">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <h2 style="margin-bottom:12px">See Your Booking Status</h2>
+      <p style="color:var(--muted);font-size:0.9rem;margin-bottom:16px">
+        Enter your booking code (e.g. PGC-BOOK-2026-XXXXXX) to check payment &amp; ticket status.
+      </p>
+      <label>Booking Code</label>
+      <input name="code" value="{{ code }}" placeholder="PGC-BOOK-2026-XXXXXX" required>
+      <button class="btn btn-gold btn-block" type="submit">CHECK STATUS</button>
+    </form>
+
+    {% if booking %}
+    <div class="form-card" style="margin-top:20px">
+      <div style="text-align:center;margin-bottom:16px">
+        {% if booking.payment_status == 'paid' %}
+        <div style="font-size:1.4rem;font-weight:900;color:#81c784">PAID ✓</div>
+        <p style="color:var(--muted);margin-top:6px">Your payment is confirmed. Tickets are ready.</p>
+        {% elif booking.payment_status == 'pending' %}
+        <div style="font-size:1.4rem;font-weight:900;color:#ffb74d">PENDING</div>
+        <p style="color:var(--muted);margin-top:6px">Waiting for admin to confirm your payment.</p>
+        {% elif booking.payment_status == 'failed' %}
+        <div style="font-size:1.4rem;font-weight:900;color:#e57373">FAILED</div>
+        <p style="color:var(--muted);margin-top:6px">Payment was not successful. Please contact support or try again.</p>
+        {% elif booking.payment_status == 'refunded' %}
+        <div style="font-size:1.4rem;font-weight:900;color:#90a4ae">REFUNDED</div>
+        <p style="color:var(--muted);margin-top:6px">This booking has been refunded.</p>
+        {% else %}
+        <div style="font-size:1.4rem;font-weight:900;color:var(--gold)">{{ booking.payment_status|upper }}</div>
+        {% endif %}
+      </div>
+
+      <div style="font-size:0.9rem;line-height:1.7">
+        <p><strong style="color:var(--muted)">Booking code:</strong>
+          <span style="color:var(--gold);font-weight:800;letter-spacing:0.03em">{{ booking.booking_code }}</span></p>
+        <p><strong style="color:var(--muted)">Name:</strong> {{ booking.buyer_name }}</p>
+        {% if booking.buyer_email %}
+        <p><strong style="color:var(--muted)">Email:</strong> {{ booking.buyer_email }}</p>
+        {% endif %}
+        <p><strong style="color:var(--muted)">Phone:</strong> {{ booking.buyer_phone }}</p>
+        <p><strong style="color:var(--muted)">Match:</strong>
+          {% if booking.match %}{{ booking.match.display_name }}{% else %}—{% endif %}</p>
+        <p><strong style="color:var(--muted)">Class:</strong>
+          {% if booking.ticket_class %}{{ booking.ticket_class.name }}{% else %}—{% endif %}
+          · Qty {{ booking.quantity }}</p>
+        <p><strong style="color:var(--muted)">Amount:</strong>
+          Rs. {{ '%.2f'|format(booking.total_amount|float) }}</p>
+        <p><strong style="color:var(--muted)">Payment method:</strong>
+          {{ booking.payment_method or '—' }}</p>
+        {% if booking.paid_at %}
+        <p><strong style="color:var(--muted)">Paid at:</strong>
+          {{ booking.paid_at.strftime('%d %b %Y · %I:%M %p') }}</p>
+        {% endif %}
+        <p><strong style="color:var(--muted)">Booked on:</strong>
+          {{ booking.created_at.strftime('%d %b %Y · %I:%M %p') if booking.created_at else '—' }}</p>
+      </div>
+
+      {% if tickets %}
+      <hr style="border:none;border-top:1px solid var(--glass-border);margin:20px 0">
+      <h3 style="font-size:1rem;margin-bottom:12px;color:var(--gold-light)">Your Tickets</h3>
+      {% for t in tickets %}
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:12px;
+                  padding:12px;border-radius:10px;background:var(--glass);border:1px solid var(--glass-border)">
+        <div style="flex:1;min-width:140px">
+          <div style="font-weight:800;letter-spacing:0.03em">{{ t.ticket_code }}</div>
+          <div style="font-size:0.85rem;color:var(--muted)">{{ t.holder_name or booking.buyer_name }}</div>
+          <div style="margin-top:4px">
+            {% if t.status == 'valid' %}
+            <span style="color:#81c784;font-weight:700;font-size:0.8rem">VALID</span>
+            {% elif t.status == 'used' %}
+            <span style="color:#ffb74d;font-weight:700;font-size:0.8rem">USED</span>
+            {% else %}
+            <span style="color:#e57373;font-weight:700;font-size:0.8rem">{{ t.status|upper }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn btn-gold btn-sm" href="{{ url_for('public.ticket_view', code=t.ticket_code) }}">View</a>
+          <a class="btn btn-outline btn-sm" href="{{ url_for('public.ticket_png', code=t.ticket_code) }}">PNG</a>
+          <a class="btn btn-outline btn-sm" href="{{ url_for('public.ticket_pdf', code=t.ticket_code) }}">PDF</a>
+        </div>
+      </div>
+      {% endfor %}
+      {% elif booking.payment_status == 'pending' %}
+      <p style="margin-top:16px;color:var(--muted);font-size:0.9rem">
+        Tickets will appear here once admin confirms your payment. You will also get an email.
+      </p>
+      {% endif %}
+
+      <p style="margin-top:16px;text-align:center">
+        <a class="btn btn-outline btn-sm" href="{{ url_for('public.success', code=booking.booking_code) }}">
+          Open full booking page
+        </a>
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

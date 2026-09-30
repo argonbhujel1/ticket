@@ -1,0 +1,105 @@
+{% extends "public/base.html" %}
+{% block title %}{{ site_name }} {{ site_year }} — Buy Official Football Tickets{% endblock %}
+{% block content %}
+{% set home_bg = get_setting('home_background','') %}
+<section class="hero hero-stadium"{% if home_bg %} style="background-image:linear-gradient(180deg,rgba(5,8,16,0.45) 0%,rgba(5,8,16,0.55) 40%,rgba(5,8,16,0.82) 100%),url('{{ url_for('public.media', filename=home_bg) }}')"{% else %} style="background-image:linear-gradient(180deg,rgba(5,8,16,0.45) 0%,rgba(5,8,16,0.55) 40%,rgba(5,8,16,0.82) 100%),url('{{ url_for('static', filename='images/bg.png') }}')"{% endif %}>
+  <div class="container">
+    <h1>{{ get_setting('hero_title', 'PATHRISANISCHARE\nGOLD CUP 2026') }}</h1>
+    <p class="tagline">{{ site_tagline }}</p>
+    <a href="{{ url_for('public.matches') }}" class="btn btn-gold">BUY TICKET</a>
+
+    {% if featured %}
+    <div style="margin-top:36px">
+      <div style="color:var(--muted);font-size:0.85rem;margin-bottom:8px;font-weight:700;letter-spacing:0.06em">NEXT MATCH</div>
+      <div style="font-size:1.2rem;font-weight:800">
+        {{ featured.home_team.short_name or featured.home_team.name }}
+        <span style="color:var(--gold)">⚽</span>
+        {{ featured.away_team.short_name or featured.away_team.name }}
+      </div>
+      <div class="countdown" id="countdown" data-target="{{ featured.match_date.isoformat() }}">
+        <div class="unit"><strong id="d">--</strong><span>Days</span></div>
+        <div class="unit"><strong id="h">--</strong><span>Hrs</span></div>
+        <div class="unit"><strong id="m">--</strong><span>Min</span></div>
+        <div class="unit"><strong id="s">--</strong><span>Sec</span></div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Upcoming Matches</h2>
+    <div class="match-grid">
+      {% for m in matches %}
+      <article class="match-card">
+        <div class="league">Pathari Gold Cup</div>
+        <div class="teams">
+          <div class="team">
+            {% if m.home_team and m.home_team.logo %}
+            <div class="crest crest-img"><img src="{{ url_for('public.media', filename=m.home_team.logo) }}" alt=""></div>
+            {% else %}
+            <div class="crest">{{ (m.home_team.short_name or m.home_team.name)[:2]|upper }}</div>
+            {% endif %}
+            <div class="name">{{ m.home_team.short_name or m.home_team.name }}</div>
+          </div>
+          <div class="vs">VS</div>
+          <div class="team">
+            {% if m.away_team and m.away_team.logo %}
+            <div class="crest crest-img"><img src="{{ url_for('public.media', filename=m.away_team.logo) }}" alt=""></div>
+            {% else %}
+            <div class="crest" style="background:linear-gradient(145deg,#b71c1c,#7f0000)">{{ (m.away_team.short_name or m.away_team.name)[:2]|upper }}</div>
+            {% endif %}
+            <div class="name">{{ m.away_team.short_name or m.away_team.name }}</div>
+          </div>
+        </div>
+        <div class="meta">
+          <div>📅 {{ m.match_date.strftime('%d %b %Y · %I:%M %p') }}</div>
+          <div>📍 {{ m.venue }}{% if m.venue_detail %} · {{ m.venue_detail }}{% endif %}</div>
+        </div>
+        <div class="countdown countdown-sm" data-target="{{ m.match_date.isoformat() }}">
+          <div class="unit"><strong class="cd-d">--</strong><span>Days</span></div>
+          <div class="unit"><strong class="cd-h">--</strong><span>Hrs</span></div>
+          <div class="unit"><strong class="cd-m">--</strong><span>Min</span></div>
+          <div class="unit"><strong class="cd-s">--</strong><span>Sec</span></div>
+        </div>
+        <a class="btn btn-gold btn-block" href="{{ url_for('public.buy', match_id=m.id) }}">BUY TICKET</a>
+      </article>
+      {% else %}
+      <p style="color:var(--muted)">No upcoming matches yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function tickOne(el){
+    const target = new Date(el.dataset.target).getTime();
+    if(isNaN(target)) return;
+    const now = Date.now();
+    let diff = Math.max(0, target - now);
+    const d = Math.floor(diff/86400000); diff -= d*86400000;
+    const h = Math.floor(diff/3600000); diff -= h*3600000;
+    const m = Math.floor(diff/60000); diff -= m*60000;
+    const s = Math.floor(diff/1000);
+    const dEl = el.querySelector('#d') || el.querySelector('.cd-d');
+    const hEl = el.querySelector('#h') || el.querySelector('.cd-h');
+    const mEl = el.querySelector('#m') || el.querySelector('.cd-m');
+    const sEl = el.querySelector('#s') || el.querySelector('.cd-s');
+    if(dEl) dEl.textContent = pad(d);
+    if(hEl) hEl.textContent = pad(h);
+    if(mEl) mEl.textContent = pad(m);
+    if(sEl) sEl.textContent = pad(s);
+  }
+  function tickAll(){
+    document.querySelectorAll('.countdown[data-target]').forEach(tickOne);
+  }
+  tickAll();
+  setInterval(tickAll, 1000);
+})();
+</script>
+{% endblock %}

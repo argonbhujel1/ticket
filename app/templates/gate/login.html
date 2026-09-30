@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/static/images/favicon.png" type="image/png">
+  <title>Gate Login · PGC</title>
+  <style>
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+      font-family:system-ui,sans-serif;background:#070b14;color:#f0f2f5}
+    .box{width:min(360px,92vw);background:#0d1526;border:1px solid rgba(201,162,39,0.35);
+      border-radius:16px;padding:28px;box-shadow:0 0 40px rgba(201,162,39,0.12)}
+    h1{color:#c9a227;font-size:1.15rem;text-align:center;margin:0 0 8px;letter-spacing:0.06em}
+    p{text-align:center;color:#8b93a7;font-size:0.85rem;margin:0 0 20px}
+    label{display:block;font-size:0.8rem;color:#8b93a7;margin-bottom:4px}
+    input{width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#0a0e18;
+      color:#fff;margin-bottom:12px;box-sizing:border-box}
+    button{width:100%;padding:14px;border:none;border-radius:999px;background:#c9a227;
+      color:#111;font-weight:800;cursor:pointer;font-size:1rem}
+    .err{background:rgba(229,57,53,0.15);border:1px solid #e53935;color:#ffcdd2;
+      padding:10px;border-radius:8px;margin-bottom:12px;font-size:0.9rem}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>PGC GATE LOGIN</h1>
+    <p>Staff only — separate from admin panel</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for c,m in messages %}<div class="err">{{ m }}</div>{% endfor %}
+    {% endwith %}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Username</label>
+      <input name="username" required autocomplete="username">
+      <label>Password</label>
+      <input name="password" type="password" required autocomplete="current-password">
+      <button type="submit">ENTER GATE</button>
+    </form>
+  </div>
+</body>
+</html>
